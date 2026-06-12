@@ -507,6 +507,20 @@ if (isIndexPage) {
     desc.className = "project-card-desc";
     desc.textContent = truncate(project.description, 120);
 
+    var matchInfo = document.createElement("div");
+    matchInfo.className = "project-match-info";
+
+    if (project.match_percentage !== undefined) {
+      matchInfo.innerHTML =
+        "<strong>Match:</strong> " +
+        project.match_percentage +
+        "% • Matched " +
+        project.matched_count +
+        " of " +
+        project.total_selected +
+        " skills";
+    }
+
     // Tags row
     var tagsRow = document.createElement("div");
     tagsRow.className = "project-card-tags";
@@ -536,7 +550,8 @@ if (isIndexPage) {
 
     card.appendChild(title);
     card.appendChild(desc);
-    card.appendChild(tagsRow);
+    card.appendChild(matchInfo);
+    card.appendChild(tags);
     card.appendChild(footer);
 
     return card;

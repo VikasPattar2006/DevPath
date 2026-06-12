@@ -59,6 +59,31 @@ def score_single_project(project, user_skills, level, interest, time_availabilit
 
     return score
 
+def calculate_skill_match(project, user_skills):
+    project_skills = [
+        SKILL_ALIASES.get(skill.lower(), skill.lower())
+        for skill in project.get("skills", [])
+    ]
+
+    matched_skills = [
+        skill for skill in user_skills
+        if skill in project_skills
+    ]
+
+    match_percentage = 0
+
+    if len(user_skills) > 0:
+        match_percentage = round(
+            (len(matched_skills) / len(user_skills)) * 100
+        )
+
+    return {
+        "matched_count": len(matched_skills),
+        "total_selected": len(user_skills),
+        "match_percentage": match_percentage,
+        "matched_skills": matched_skills
+    }
+
 
 def get_recommendations(skills_string, level, interest, time_availability):
     """
@@ -82,12 +107,30 @@ def get_recommendations(skills_string, level, interest, time_availability):
         )
         # Ignore projects with a score of 0 since they
         # have no meaningful overlap with the user's inputs.
-        if score > 0:
-            scored_projects.append({"project": project, "score": score})
+        if score >= SCORING_WEIGHTS["skill"]:
+
+            match_data = calculate_skill_match(
+            project,
+            user_skills
+        )
+
+        scored.append({
+            "project": project,
+            "score": score,
+            "match_data": match_data
+        })
 
     # Sort projects in descending order so the
     # most relevant recommendations appear first.
-    scored_projects.sort(key=lambda item: item["score"], reverse=True)
+    # scored_projects.sort(key=lambda item: item["score"], reverse=True)
+    top_projects = []
+
+    for item in scored[:MAX_RESULTS]:
+        project = item["project"].copy()
+
+        project.update(item["match_data"])
+
+        top_projects.append(project)
 
     # Return only the project dicts, not the score metadata
     return [item["project"] for item in scored_projects[:MAX_RESULTS]]
